@@ -8,8 +8,10 @@ const FLEXPOOL_BASEURL ="https://api.flexpool.io/v2"
 
 const stats = async({coin=COINS.ETHEREUM, wallet}) => {
     return new Promise((resolve)=>{
+        const url = `${FLEXPOOL_BASEURL}/miner/stats?coin=${coin}&address=${wallet}`
+        console.log(`Pinging ${url} ...`)
         request({
-            url:`${FLEXPOOL_BASEURL}/miner/stats?coin=${coin}&address=${wallet}`,
+            url,
             headers:{'accept':'application/json'}},
             (err,_,body)=>{
                 if(err){

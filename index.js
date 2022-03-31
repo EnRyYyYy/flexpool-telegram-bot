@@ -1,34 +1,54 @@
 const { Telegraf } = require('telegraf')
 const { stats } = require('./flexpool')
 const {Scheduler} = require('./scheduler')
-
-const {
-    botToken, 
-    wallet, 
-    coin, 
-    intervalMinutes,
-    debug
-} = require('./config.json')
+const {ERROR_CODES}=require('./error-codes')
+const { parseCliArg, ARG_TYPES } = require('./utils')
 
 let scheduler
-let bot
 let chatId
+
 const main = () => {
+    const argv = process.argv
+    console.log(`= Staring server mode with params: =============================`)
+    const wallet = parseCliArg(argv,'wallet', ARG_TYPES.STRING, ERROR_CODES.INVALID_WALLET_ARG, ERROR_CODES.MISSING_WALLET_ARG)
+    console.log(`wallet: ${wallet}`)
+    const bot = parseCliArg(argv,'bot', ARG_TYPES.STRING,ERROR_CODES.INVALID_BOT_ARG, ERROR_CODES.MISSING_BOT_ARG)
+    console.log(`bot: ${bot}`)
+    const interval = parseCliArg(argv,'interval',ARG_TYPES.POSITIVE_INTEGER, ERROR_CODES.INVALID_INTERVAL_ARG,ERROR_CODES.MISSING_INTERVAL_ARG,1)
+    console.log(`interval: ${interval}`)
+    const coin = parseCliArg(argv,'coin', ARG_TYPES.COIN, ERROR_CODES.INVALID_COIN_ARG, ERROR_CODES.MISSING_COIN_ARG, 'ETH')
+    console.log(`coin: ${coin}`)
+    console.log(`==================================================================`)
+    
+    
+    
+    
+    
+
+    try{
+        telegraf = new Telegraf(bot)
+    }catch(ex){
+        throw new Error(ERROR_CODES.TELEGRAM_TOKEN_INVALID)
+    }
+
     try{
         // Bot setup
-        bot = new Telegraf(botToken)
+        
 
         // Scheduler setup
         scheduler = new Scheduler(async ()=>{
             try{
-                const {averageEffectiveHashrate,
+                console.log(`wallet: ${wallet}`)
+                const {
+                    averageEffectiveHashrate,
                     currentEffectiveHashrate,
                     invalidShares,
                     reportedHashrate,
                     staleShares,
-                    validShares} = await stats({wallet, coin})
-                if(bot && chatId){
-                    bot.telegram.sendMessage(
+                    validShares
+                } = await stats({wallet, coin})
+                if(telegraf && chatId){
+                    telegraf.telegram.sendMessage(
                         chatId, 
                         `Your average effective hash rate is: ${averageEffectiveHashrate}
                         Your current effective hashrate is: ${currentEffectiveHashrate}
@@ -40,11 +60,11 @@ const main = () => {
                 console.error('Error while retrieving wallet stats')
                 console.error(ex)
             }
-        },intervalMinutes, debug)
+        },interval)
 
         scheduler.start()
 
-        bot.start(async (ctx) => {
+        telegraf.start(async (ctx) => {
 
             let user = ctx.chat.username
             chatId = ctx.chat.id
@@ -55,34 +75,52 @@ const main = () => {
         })
 
         
-        bot.command('report', async (ctx) => {
+        telegraf.command('report', async (ctx) => {
             const latest = await db.extractLatestData()
             ctx.reply(latest)
         })
 
-        bot.launch()  
+        telegraf.launch()  
         console.log('Bot is running...')
 
 
     }catch(ex){
-        if (bot && chatId) {
-            bot.telegram.sendMessage(chatId, 'A fatal error occurred while running the bot. Pleaase restart it manually')
+        if (telegraf && chatId) {
+            telegraf.telegram.sendMessage(chatId, 'A fatal error occurred while running the bot. Pleaase restart it manually')
         }
-        console.error('An error occurred')
-        console.log(ex)
+        console.error(ex)
+        throw new Error(ERROR_CODES.INTERNAL_APPLICATION_ERROR)
     }
 }
-main();
+
+try{
+    main()
+}
+catch(ex){
+    let message = "[ERR] "
+    switch(ex.message){
+        case ERROR_CODES.TELEGRAM_TOKEN_INVALID:
+            message = "Telegram bot token invalid"
+        case ERROR_CODES.TELEGRAM_TOKEN_MISSING:
+            message = "Missing required param '--bot'."
+        case ERROR_CODES.WALLET_MISSING:
+            message = "Missing required param '--wallet'"
+        default:
+            message = "Internal application error"
+    }
+    console.log(message)
+    console.error(ex)
+}
 
 
 // Enable graceful stop
 process.once('SIGINT', () => {
-    bot.stop('SIGINT')
+    if(telegraf) {telegraf.stop('SIGINT')}
     if(scheduler) {scheduler.stop()}
     if (broadcaster) { broadcaster.stop() }
 })
 process.once('SIGTERM', () => {
-    bot.stop('SIGTERM')
+    if(telegraf) {telegraf.stop('SIGTERM')}
     if(scheduler) {scheduler.stop()}
     if (broadcaster) { broadcaster.stop() }
 })
