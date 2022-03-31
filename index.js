@@ -19,11 +19,6 @@ const main = () => {
     const coin = parseCliArg(argv,'coin', ARG_TYPES.COIN, ERROR_CODES.INVALID_COIN_ARG, ERROR_CODES.MISSING_COIN_ARG, 'ETH')
     console.log(`coin: ${coin}`)
     console.log(`==================================================================`)
-    
-    
-    
-    
-    
 
     try{
         telegraf = new Telegraf(bot)
@@ -32,10 +27,6 @@ const main = () => {
     }
 
     try{
-        // Bot setup
-        
-
-        // Scheduler setup
         scheduler = new Scheduler(async ()=>{
             try{
                 console.log(`wallet: ${wallet}`)
@@ -50,9 +41,9 @@ const main = () => {
                 if(telegraf && chatId){
                     telegraf.telegram.sendMessage(
                         chatId, 
-                        `Your average effective hash rate is: ${averageEffectiveHashrate}\n` +
-                        `Your current effective hashrate is: ${currentEffectiveHashrate}\n` +
-                        `Your reported hashrate is: ${reportedHashrate}.\n` +
+                        `Your average effective hash rate is: ${averageEffectiveHashrate}Mhs.\n` +
+                        `Your current effective hashrate is: ${currentEffectiveHashrate}Mhs.\n` +
+                        `Your reported hashrate is: ${reportedHashrate}Mhs.\n` +
                         `Found ${validShares} valid shares, ${invalidShares} invalids and ${staleShares} stale`
                     )
                 }
