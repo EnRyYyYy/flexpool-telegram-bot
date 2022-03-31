@@ -50,10 +50,10 @@ const main = () => {
                 if(telegraf && chatId){
                     telegraf.telegram.sendMessage(
                         chatId, 
-                        `Your average effective hash rate is: ${averageEffectiveHashrate}
-                        Your current effective hashrate is: ${currentEffectiveHashrate}
-                        Your reported hashrate is: ${reportedHashrate}.
-                        Found ${validShares} valid shares, ${invalidShares} invalids and ${staleShares} stale`
+                        `Your average effective hash rate is: ${averageEffectiveHashrate}\n` +
+                        `Your current effective hashrate is: ${currentEffectiveHashrate}\n` +
+                        `Your reported hashrate is: ${reportedHashrate}.\n` +
+                        `Found ${validShares} valid shares, ${invalidShares} invalids and ${staleShares} stale`
                     )
                 }
             }catch(ex){
@@ -72,12 +72,6 @@ const main = () => {
                 scheduler.start()
             }
             ctx.reply(`Welcome, ${user}. Your bot started`)    
-        })
-
-        
-        telegraf.command('report', async (ctx) => {
-            const latest = await db.extractLatestData()
-            ctx.reply(latest)
         })
 
         telegraf.launch()  
