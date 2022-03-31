@@ -36,10 +36,10 @@ const stats = async({coin=COINS.ETHEREUM, wallet}) => {
                 // Convert data in Mhs
 
                 resolve({
-                    averageEffectiveHashrate: (averageEffectiveHashrate/100).toFixed(3),
-                    currentEffectiveHashrate: (currentEffectiveHashrate/100).toFixed(3),
+                    averageEffectiveHashrate: (averageEffectiveHashrate/1000000).toFixed(3),
+                    currentEffectiveHashrate: (currentEffectiveHashrate/1000000).toFixed(3),
                     invalidShares,
-                    reportedHashrate: (reportedHashrate/100).toFixed(3),
+                    reportedHashrate: (reportedHashrate/1000000).toFixed(3),
                     staleShares,
                     validShares
                 })
